@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Satta Matka Game</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
+    <!-- Socket.IO Client -->
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+        }
+        
+        .spinner {
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .result-animation {
+            animation: resultPop 0.5s ease-out;
+        }
+
+        @keyframes resultPop {
+            0% { transform: scale(0.5); opacity: 0; }
+            70% { transform: scale(1.1); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <!-- Login/Register Section -->
+    <div id="auth-section" class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center">
+        <div class="bg-white p-8 rounded-lg shadow-lg w-96">
+            <h2 class="text-2xl font-bold mb-6 text-center">Welcome to Satta Matka</h2>
+            
+            <div class="space-y-4">
+                <input type="text" id="username" placeholder="Username" 
+                       class="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500">
+                
+                <input type="password" id="password" placeholder="Password" 
+                       class="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500">
+                
+                <button onclick="login()" 
+                        class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition">
+                    Login
+                </button>
+                
+                <button onclick="showRegister()" 
+                        class="w-full bg-gray-200 text-gray-700 py-2 rounded hover:bg-gray-300 transition">
+                    Register
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Game Interface -->
+    <div id="game-interface" class="hidden">
+        <!-- Header -->
+        <header class="bg-white shadow-md">
+            <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+                <h1 class="text-xl font-bold text-gray-800">Satta Matka Game</h1>
+                
+                <div class="flex items-center space-x-4">
+                    <div class="text-sm">
+                        <span class="text-gray-600">Balance:</span>
+                        <span id="wallet-balance" class="font-semibold">₹0</span>
+                    </div>
+                    
+                    <button onclick="logout()" 
+                            class="bg-red-500 text-white px-4 py-1 rounded text-sm hover:bg-red-600 transition">
+                        Logout
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Admin Panel -->
+        <div id="admin-panel" class="hidden bg-white shadow-md mt-4 mx-4 p-4 rounded-lg">
+            <h2 class="text-lg font-semibold mb-4">Admin Controls</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="space-y-4">
+                    <div class="p-4 bg-gray-50 rounded-lg">
+                        <h3 class="font-medium mb-2">Game Control</h3>
+                        <div class="space-x-2">
+                            <button onclick="startGame()" 
+                                    class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition">
+                                Start Game
+                            </button>
+                            <button onclick="stopGame()" 
+                                    class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition">
+                                Stop Game
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="p-4 bg-gray-50 rounded-lg">
+                        <h3 class="font-medium mb-2">Result Mode</h3>
+                        <div class="space-x-2">
+                            <button onclick="setResultMode('manual')" 
+                                    class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition">
+                                Manual
+                            </button>
+                            <button onclick="setResultMode('auto')" 
+                                    class="bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600 transition">
+                                Automatic
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-4">
+                    <div class="p-4 bg-gray-50 rounded-lg">
+                        <h3 class="font-medium mb-2">Connected Users</h3>
+                        <div id="connected-users" class="max-h-40 overflow-y-auto">
+                            <!-- Users will be listed here -->
+                        </div>
+                    </div>
+
+                    <div class="p-4 bg-gray-50 rounded-lg">
+                        <h3 class="font-medium mb-2">Quick Actions</h3>
+                        <button onclick="showWalletManagement()" 
+                                class="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600 transition">
+                            Manage Wallets
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Game Status -->
+        <div class="bg-white shadow-md mt-4 mx-4 p-4 rounded-lg">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="text-center">
+                    <h3 class="text-sm text-gray-600">Current Phase</h3>
+                    <p id="current-phase" class="text-lg font-semibold">Waiting...</p>
+                </div>
+                
+                <div class="text-center">
+                    <h3 class="text-sm text-gray-600">Time Remaining</h3>
+                    <p id="time-remaining" class="text-lg font-semibold">00:00</p>
+                </div>
+                
+                <div class="text-center">
+                    <h3 class="text-sm text-gray-600">Last Result</h3>
+                    <p id="last-result" class="text-lg font-semibold">---</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Betting Section -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 mx-4">
+            <!-- Betting Options -->
+            <div class="bg-white shadow-md p-4 rounded-lg">
+                <h2 class="text-lg font-semibold mb-4">Place Your Bet</h2>
+                
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Bet Type</label>
+                        <select id="bet-type" class="mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="single_digit">Single Digit</option>
+                            <option value="jodi">Jodi</option>
+                            <option value="single_panna">Single Panna</option>
+                            <option value="double_panna">Double Panna</option>
+                            <option value="triple_panna">Triple Panna</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Number</label>
+                        <input type="text" id="bet-number" 
+                               class="mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Amount (₹)</label>
+                        <input type="number" id="bet-amount" min="1" 
+                               class="mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+
+                    <button onclick="placeBet()" 
+                            class="w-full bg-green-500 text-white py-2 rounded hover:bg-green-600 transition">
+                        Place Bet
+                    </button>
+                </div>
+            </div>
+
+            <!-- Results History -->
+            <div class="bg-white shadow-md p-4 rounded-lg">
+                <h2 class="text-lg font-semibold mb-4">Last 5 Results</h2>
+                <div id="results-history" class="space-y-2">
+                    <!-- Results will be listed here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Result Animation Modal -->
+    <div id="result-modal" class="fixed inset-0 bg-black bg-opacity-75 hidden flex items-center justify-center">
+        <div class="bg-white p-8 rounded-lg shadow-xl text-center result-animation">
+            <h2 class="text-2xl font-bold mb-4">Result</h2>
+            <div id="result-display" class="text-4xl font-bold text-blue-600 mb-4">
+                <!-- Result will be displayed here -->
+            </div>
+            <button onclick="closeResultModal()" 
+                    class="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600 transition">
+                Close
+            </button>
+        </div>
+    </div>
+
+    <!-- Wallet Management Modal -->
+    <div id="wallet-modal" class="fixed inset-0 bg-black bg-opacity-75 hidden flex items-center justify-center">
+        <div class="bg-white p-6 rounded-lg shadow-xl w-96">
+            <h2 class="text-xl font-bold mb-4">Wallet Management</h2>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Select User</label>
+                    <select id="wallet-user" 
+                            class="mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <!-- Users will be listed here -->
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Amount (₹)</label>
+                    <input type="number" id="wallet-amount" min="1" 
+                           class="mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+
+                <div class="flex space-x-2">
+                    <button onclick="updateWallet('add')" 
+                            class="flex-1 bg-green-500 text-white py-2 rounded hover:bg-green-600 transition">
+                        Add
+                    </button>
+                    <button onclick="updateWallet('remove')" 
+                            class="flex-1 bg-red-500 text-white py-2 rounded hover:bg-red-600 transition">
+                        Remove
+                    </button>
+                </div>
+
+                <button onclick="closeWalletModal()" 
+                        class="w-full bg-gray-200 text-gray-700 py-2 rounded hover:bg-gray-300 transition">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="dashboard.js"></script>
+</body>
+</html>
