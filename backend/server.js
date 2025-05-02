@@ -222,18 +222,10 @@ class GameServer {
 
 module.exports = GameServer;
 
-const getLocalIP = () => {
-  const os = require('os');
-  const interfaces = os.networkInterfaces();
-  for (const name of Object.keys(interfaces)) {
-    for (const iface of interfaces[name]) {
-      if (iface.family === 'IPv4' && !iface.internal) {
-        return iface.address;
-      }
-    }
-  }
-  return '127.0.0.1';
-};
+/**
+ * Removed duplicate declaration of getLocalIP function to fix redeclaration error.
+ * The getLocalIP function is declared only once at the top of the file.
+ */
 
 // Create and start server instance if this file is run directly
 if (require.main === module) {
