@@ -7,7 +7,7 @@ const SocketHandler = require('./socket-handler');
 const os = require('os');
 
 // Get local IP address
-const getLocalIP = () => {
+function getLocalIP() {
   const interfaces = os.networkInterfaces();
   for (const name of Object.keys(interfaces)) {
     for (const iface of interfaces[name]) {
@@ -17,7 +17,7 @@ const getLocalIP = () => {
     }
   }
   return '127.0.0.1';
-};
+}
 
 class GameServer {
   constructor() {
@@ -215,17 +215,30 @@ class GameServer {
 
     // Start server
     this.server.listen(port, () => {
-      console.log(\`Server running on port \${port}\`);
+      console.log("Server running on port " + port);
     });
   }
 }
 
 module.exports = GameServer;
 
+const getLocalIP = () => {
+  const os = require('os');
+  const interfaces = os.networkInterfaces();
+  for (const name of Object.keys(interfaces)) {
+    for (const iface of interfaces[name]) {
+      if (iface.family === 'IPv4' && !iface.internal) {
+        return iface.address;
+      }
+    }
+  }
+  return '127.0.0.1';
+};
+
 // Create and start server instance if this file is run directly
 if (require.main === module) {
     const server = new GameServer();
     const PORT = 8000;
     server.start(PORT);
-    console.log(\`Server running at http://\${getLocalIP()}:\${PORT}\`);
+    console.log("Server running at http://" + getLocalIP() + ":" + PORT);
 }
