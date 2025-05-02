@@ -1,0 +1,47 @@
+{
+  "name": "satta-matka-game",
+  "version": "1.0.0",
+  "description": "Fully Offline Satta Matka Game Desktop App",
+  "main": "main.js",
+  "scripts": {
+    "start": "node backend/server.js",
+    "dev": "NODE_ENV=development node backend/server.js",
+    "build": "electron-builder",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "build": {
+    "appId": "com.sattamatka.game",
+    "productName": "Satta Matka Game",
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "target": "nsis"
+    },
+    "mac": {
+      "target": "dmg"
+    },
+    "linux": {
+      "target": "AppImage"
+    }
+  },
+  "keywords": [
+    "electron",
+    "satta",
+    "matka",
+    "game",
+    "offline"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@fortawesome/fontawesome-free": "^6.0.0-beta3",
+    "electron": "latest",
+    "electron-builder": "latest",
+    "express": "^5.1.0",
+    "socket.io": "^4.8.1",
+    "sqlite3": "^5.1.7",
+    "tailwindcss": "latest",
+    "ws": "latest"
+  }
+}
