@@ -36,7 +36,7 @@ class GameServer {
   }
 
   setupDatabase() {
-    const dbPath = path.join(__dirname, '..', 'db', 'database.sqlite');
+    const dbPath = path.resolve(__dirname, '..', 'db', 'database.sqlite');
     this.db = new sqlite3.Database(dbPath, (err) => {
       if (err) {
         console.error('Database connection error:', err);
@@ -50,13 +50,13 @@ class GameServer {
   initializeDatabase() {
     this.db.serialize(() => {
       // Users table
-      this.db.run(`CREATE TABLE IF NOT EXISTS users (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        username TEXT UNIQUE,
-        password TEXT,
-        role TEXT,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-      )`);
+      this.db.run("CREATE TABLE IF NOT EXISTS users (\
+        id INTEGER PRIMARY KEY AUTOINCREMENT,\
+        username TEXT UNIQUE,\
+        password TEXT,\
+        role TEXT,\
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP\
+      )");
 
       // Create default admin user if not exists
       this.db.get('SELECT id FROM users WHERE username = ?', ['admin'], (err, row) => {
@@ -81,38 +81,38 @@ class GameServer {
       });
 
       // Wallets table
-      this.db.run(`CREATE TABLE IF NOT EXISTS wallets (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        user_id INTEGER,
-        balance DECIMAL(10,2) DEFAULT 0,
-        FOREIGN KEY(user_id) REFERENCES users(id)
-      )`);
+      this.db.run("CREATE TABLE IF NOT EXISTS wallets (\
+        id INTEGER PRIMARY KEY AUTOINCREMENT,\
+        user_id INTEGER,\
+        balance DECIMAL(10,2) DEFAULT 0,\
+        FOREIGN KEY(user_id) REFERENCES users(id)\
+      )");
 
       // Bets table
-      this.db.run(`CREATE TABLE IF NOT EXISTS bets (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        user_id INTEGER,
-        game_session_id INTEGER,
-        bet_type TEXT,
-        number TEXT,
-        amount DECIMAL(10,2),
-        status TEXT DEFAULT 'pending',
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY(user_id) REFERENCES users(id),
-        FOREIGN KEY(game_session_id) REFERENCES game_sessions(id)
-      )`);
+      this.db.run("CREATE TABLE IF NOT EXISTS bets (\
+        id INTEGER PRIMARY KEY AUTOINCREMENT,\
+        user_id INTEGER,\
+        game_session_id INTEGER,\
+        bet_type TEXT,\
+        number TEXT,\
+        amount DECIMAL(10,2),\
+        status TEXT DEFAULT 'pending',\
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,\
+        FOREIGN KEY(user_id) REFERENCES users(id),\
+        FOREIGN KEY(game_session_id) REFERENCES game_sessions(id)\
+      )");
 
       // Game sessions table
-      this.db.run(`CREATE TABLE IF NOT EXISTS game_sessions (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        start_time DATETIME,
-        end_time DATETIME,
-        open_result TEXT,
-        jodi_result TEXT,
-        close_result TEXT,
-        status TEXT DEFAULT 'running',
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-      )`);
+      this.db.run("CREATE TABLE IF NOT EXISTS game_sessions (\
+        id INTEGER PRIMARY KEY AUTOINCREMENT,\
+        start_time DATETIME,\
+        end_time DATETIME,\
+        open_result TEXT,\
+        jodi_result TEXT,\
+        close_result TEXT,\
+        status TEXT DEFAULT 'running',\
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP\
+      )");
     });
   }
 
@@ -195,10 +195,10 @@ class GameServer {
   getLatestResults(limit = 5) {
     return new Promise((resolve, reject) => {
       this.db.all(
-        `SELECT * FROM game_sessions 
+        \`SELECT * FROM game_sessions 
          WHERE status = 'completed' 
          ORDER BY created_at DESC 
-         LIMIT ?`,
+         LIMIT ?\`,
         [limit],
         (err, rows) => {
           if (err) reject(err);
@@ -214,7 +214,7 @@ class GameServer {
 
     // Start server
     this.server.listen(port, () => {
-      console.log(`Server running on port ${port}`);
+      console.log(\`Server running on port \${port}\`);
     });
   }
 }
@@ -226,5 +226,5 @@ if (require.main === module) {
     const server = new GameServer();
     const PORT = 8000;
     server.start(PORT);
-    console.log(`Server running at http://${getLocalIP()}:${PORT}`);
+    console.log(\`Server running at http://\${getLocalIP()}:\${PORT}\`);
 }
