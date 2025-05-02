@@ -37,6 +37,7 @@ class GameServer {
 
   setupDatabase() {
     const dbPath = path.resolve(__dirname, '..', 'db', 'database.sqlite');
+    console.log('Attempting to open database at:', dbPath);
     this.db = new sqlite3.Database(dbPath, (err) => {
       if (err) {
         console.error('Database connection error:', err);
@@ -194,17 +195,17 @@ class GameServer {
 
   getLatestResults(limit = 5) {
     return new Promise((resolve, reject) => {
-      this.db.all(
-        \`SELECT * FROM game_sessions 
-         WHERE status = 'completed' 
-         ORDER BY created_at DESC 
-         LIMIT ?\`,
-        [limit],
-        (err, rows) => {
-          if (err) reject(err);
-          resolve(rows);
-        }
-      );
+    this.db.all(
+      `SELECT * FROM game_sessions 
+       WHERE status = 'completed' 
+       ORDER BY created_at DESC 
+       LIMIT ?`,
+      [limit],
+      (err, rows) => {
+        if (err) reject(err);
+        resolve(rows);
+      }
+    );
     });
   }
 
